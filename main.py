@@ -10,10 +10,13 @@ import imageio
 
 
 parser = argparse.ArgumentParser(description='')
-parser.add_argument('--dataset_dir', dest='dataset_dir', default='horse2zebra', help='path of the dataset')
+parser.add_argument('--batch_size', dest='batch_size', type=int, default=4, help='# images in batch')
+parser.add_argument('--dataset_dir', dest='dataset_dir', default='horse2zebra1', help='path of the dataset')
+parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', default='./checkpoint1', help='models are saved here')
+parser.add_argument('--sample_dir', dest='sample_dir', default='./sample1', help='sample are saved here')
+
 #parser.add_argument('--dataset_dir', dest='dataset_dir', default='horse2zebra_wgan', help='path of the dataset')
 parser.add_argument('--epoch', dest='epoch', type=int, default=200, help='# of epoch')
-parser.add_argument('--batch_size', dest='batch_size', type=int, default=8, help='# images in batch')
 parser.add_argument('--train_size', dest='train_size', type=int, default=1e8, help='# images used to train')
 parser.add_argument('--load_size', dest='load_size', type=int, default=128, help='scale images to this size')
 parser.add_argument('--fine_size', dest='fine_size', type=int, default=128, help='then crop to this size')
@@ -33,7 +36,7 @@ parser.add_argument('--input_ic', dest='input_ic', type=int, default=9, help='# 
 
 parser.add_argument('--output_nc', dest='output_nc', type=int, default=3, help='# of output image channels')
 parser.add_argument('--niter', dest='niter', type=int, default=200, help='# of iter at starting learning rate')
-parser.add_argument('--lr', dest='lr', type=float, default=2e-4, help='initial learning rate for adam')
+parser.add_argument('--lr', dest='lr', type=float, default=5e-5, help='initial learning rate for adam')
 parser.add_argument('--beta1', dest='beta1', type=float, default=0.5, help='momentum term of adam')
 parser.add_argument('--flip', dest='flip', type=bool, default=True, help='if flip the images for data argumentation')
 parser.add_argument('--which_direction', dest='which_direction', default='AtoB', help='AtoB or BtoA')
@@ -44,8 +47,6 @@ parser.add_argument('--print_freq', dest='print_freq', type=int, default=50, hel
 parser.add_argument('--continue_train', dest='continue_train', type=bool, default=True, help='if continue training, load the latest model: 1: true, 0: false')
 parser.add_argument('--serial_batches', dest='serial_batches', type=bool, default=False, help='f 1, takes images in order to make batches, otherwise takes them randomly')
 parser.add_argument('--serial_batch_iter', dest='serial_batch_iter', type=bool, default=True, help='iter into serial image list')
-parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', default='./checkpoint', help='models are saved here')
-parser.add_argument('--sample_dir', dest='sample_dir', default='./sample', help='sample are saved here')
 parser.add_argument('--test_dir', dest='test_dir', default='./test', help='test sample are saved here')
 parser.add_argument('--L1_lambda', dest='L1_lambda', type=float, default=1.0, help='weight on L1 term in objective')
 parser.add_argument('--use_resnet', dest='use_resnet', type=bool, default=True, help='generation network using reidule block')
