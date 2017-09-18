@@ -621,18 +621,18 @@ class cyclegan(object):
 						####################
 							print("====Update Critic====") 
 							for j in range(1):
-								_, summary_str = self.sess.run([self.d_optim, self.d_sum],\
+								_, summary_str, errD, errG, errL1, errP = self.sess.run([self.d_optim, self.d_sum,self.d_loss,self.g_loss,self.g_loss_l1, self.g_percetual_loss],\
 													feed_dict={self.z: batch_z,\
 													self.fake_data_image: merge_image_false,\
 													self.real_data_image: merge_image,self.real_data_video:a_video}) #
 								self.writer.add_summary(summary_str, counter) 
-						
+							print("errD: [%4.4f] , errG: [%4.4f], errL1: [%4.4f], errP: [%4.4f]" % (errD,errG,errL1,errP))
 						####################
 						# Update G network #
 						####################
 							for j in range(Diter):
 								print("====Update Generator====")
-								_, summary_str, errD, errG, errL1 = self.sess.run([self.g_optim, self.g_sum, self.d_loss,self.g_loss,self.g_loss_l1],\
+								_, summary_str, errD, errG, errL1, errP = self.sess.run([self.g_optim, self.g_sum, self.d_loss,self.g_loss,self.g_loss_l1,self.g_percetual_loss],\
 													  feed_dict={ self.z: batch_z,\
 													  self.fake_data_image: merge_image_false,\
 													  self.real_data_image: merge_image,self.real_data_video:a_video})
