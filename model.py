@@ -172,8 +172,8 @@ class cyclegan(object):
 		self.disc_wi_rv, self.DA_wi_rv = self.discriminatorA(self.real_video_tf, self.fake_data_image, self.options, reuse=True, name="discriminatorA")       
 		for i in range(16):
 			tmp1,tmp2 = self.discriminatorA(self.combined_v_tf[:,i:49+i:16], self.real_image_crop, self.options, reuse=True, name="discriminatorA")
-			self.disc_fake.append(tmp1)
-			self.DA_fake.append(tmp2)
+			self.DA_fake.append(tmp1)
+			self.disc_fake.append(tmp2)
 
 		#self.disc_fake, self.DA_fake = self.discriminatorA(self.combined_v_tf, self.real_data_image, self.options, reuse=False, name="discriminatorA")
 		fake_logit = self.DA_fake
@@ -186,13 +186,13 @@ class cyclegan(object):
 		#self.da_loss_wi_rv = self.criterionGAN(self.disc_wi_rv, tf.zeros_like(self.disc_wi_rv))
 		#self.d_loss = self.da_loss_real + (self.da_loss_fake + self.da_loss_wi_rv) / 2
         
-		self.d_loss_true = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=true_logit , labels=tf.ones_like(true_logit) ))
-		self.d_loss_wi_rv= tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=self.DA_wi_rv , labels=tf.zeros_like(self.DA_wi_rv) ))
+		self.d_loss_true = self.criterionGAN(self.disc_real, tf.ones_like(self.disc_real))
+		self.d_loss_wi_rv= self.criterionGAN(self.disc_wi_rv, tf.zeros_like(self.disc_wi_rv))
 		#self.d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit , labels=tf.zeros_like(fake_logit) )) 
 		self.d_loss_fake = 0
 
 		for i in range(16):
-			tmp = self.criterionGAN(fake_logit[i], tf.zeros_like(fake_logit[i]))
+			tmp = self.criterionGAN(self.disc_fake[i], tf.zeros_like(self.disc_fake[i]))
 			self.d_loss_fake += tmp
 		self.d_loss = self.d_loss_true + self.d_loss_fake / 16.0
 		#self.d_loss = self.d_loss_true + (self.d_loss_fake + self.d_loss_wi_rv) / 2.0
@@ -211,7 +211,7 @@ class cyclegan(object):
 			self.g_loss_consecutive += tmp
         
 		self.g_loss = self.g_loss_fake \
-						+ 1 * self.g_loss_l1 + self.g_loss_consecutive / 16.0
+						+ 1.5 * self.g_loss_l1 + 1.5 * self.g_loss_consecutive / 16.0
 						#+ self.criterionGAN(self.real_video_tf, tf.zeros_like(self.real_video_tf))\
 ## (1,5,/ 16) -- no motion
 ## (1,2,/ 16) -- ?
@@ -377,17 +377,6 @@ class cyclegan(object):
 		"""Train cyclegan"""
 		#laurence 
 		self.shot_len = 2
-		#self.video_bds =\
-		#    ['PySceneDetect/488_mp4_shot_boundary.h5.npy',\
-		#     'PySceneDetect/489_mp4_shot_boundary.h5.npy',\
-		#     'PySceneDetect/490_mp4_shot_boundary.h5.npy',\
-		#     'PySceneDetect/499_mp4_shot_boundary.h5.npy',\
-		#     'PySceneDetect/498_mp4_shot_boundary.h5.npy']	
-		#self.videos = ['PySceneDetect/488.mp4',\
-		#               'PySceneDetect/489.mp4',\
-		#               'PySceneDetect/490.mp4',\
-		#               'PySceneDetect/499.mp4',\
-		#               'PySceneDetect/498.mp4']
 
 		self.video_bds =\
 			['./slamdunk/001.h5.npy',\
@@ -452,7 +441,7 @@ class cyclegan(object):
 			 './slamdunk/[52wy][SlamDunk][029][H264].mp4',\
 			 './slamdunk/[52wy][SlamDunk][030][H264].mp4']
 
-		epoch = 0 
+		epoch = 30 
 		for epoch_batch in range(0,200): #args.epoch
 			idx = np.random.permutation(len(self.videos))
 			list_shot = []

@@ -43,14 +43,6 @@ def discriminator_image(frame, image, options, reuse=False, name="discriminatorA
 
 
 
-
-
-
-
-
-
-
-
 def discriminator_video(video0, options, reuse=False, name="discriminator_Camera"):
 
 	with tf.variable_scope(name):
