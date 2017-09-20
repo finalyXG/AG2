@@ -109,7 +109,7 @@ class cyclegan(object):
 		out_size = (crop_s, crop_s)
 		mtx0 = tf.tile(tf.constant(np.array([[0.76,0,0,0,0.76,0]])), [self.options.batch_size,1] )
 		mtx1 = tf.tile(tf.constant(np.array([[1,0,0,0,1,0]])), [self.options.batch_size,1] )
-		self.real_image_crop = tf.reshape(transformer(self.real_data_image,mtx0,(self.options.image_size,self.options.image_size)),[self.options.batch_size,128,128,3])        
+		self.real_image_crop = tf.reshape(transformer(self.real_data_image,mtx1,(self.options.image_size,self.options.image_size)),[self.options.batch_size,128,128,3])        
 		self.real_iamge_merge = tf.concat([self.real_image_crop, self.real_data_image],axis=-1)
         
 		self.g4,self.mask1,self.mask2,self.mask3,self.gb,self.fake_A_static = self.generatorA(self, self.real_image_crop,self.z, None, self.options, False,name="generatorB2A")

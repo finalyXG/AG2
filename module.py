@@ -344,12 +344,12 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#d1 = deconv2d(tf.nn.relu(e9), options.df_dim*4, name='g_d1')
 		#d1 = tf.concat([tf.nn.relu(instance_norm(d1, 'g_bn_d1')),i5],axis=-1)
 		# d1 is (2 x 2 x self.gf_dim*8*2)
-		d1_1 = deconv3d(h0, [tf.shape(h0)[0], 2, 4, 4, 256],5,5,5,2,2,2,1,1,1, name='g_b_h1', with_w=False)
+		d1_1 = deconv3d(h0, [tf.shape(h0)[0], 2, 4, 4, 256],4,4,4,2,2,2,1,1,1, name='g_b_h1', with_w=False)
 		d1_1 = tf.concat([tf.nn.relu(tf.contrib.layers.batch_norm(d1_1, scope='g_b_bn1')),i4_],axis=-1)
 		#d1_1 = conv3d(d1_1,128,4,4,4,2,1,1,name='g_b_h1_c0_1')
 		#d1_1 = tf.nn.relu(tf.contrib.layers.batch_norm(d1_1, scope='g_b_bn0_1_2'))
 
-		d1 = deconv3d(d1_1, [tf.shape(h0)[0], 4, 8, 8, 128],5,5,5,2,2,2,1,1,1, name='g_b_h1_1', with_w=False)
+		d1 = deconv3d(d1_1, [tf.shape(h0)[0], 4, 8, 8, 128],4,4,4,2,2,2,1,1,1, name='g_b_h1_1', with_w=False)
 		d1 = tf.nn.relu(tf.contrib.layers.batch_norm(d1,scope='g_b_bn1_1_1'))
 		d1 = tf.concat([d1,i3_],axis=-1)
 		#d1 = conv3d(d1,64,4,4,4,2,1,1,name='g_b_h1_c3_1')
@@ -358,7 +358,7 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#d2 = deconv2d(d1, options.df_dim*4, name='g_d2')
 		#d2 = tf.concat([tf.nn.relu(instance_norm(d2, 'g_bn_d2')),i4],axis=-1 )
 		#d2 is (4 x 4 x self.gf_dim*8*2)
-		d1_2 = deconv3d(d1, [tf.shape(h0)[0], 8, 16, 16, 64],5,5,5,2,2,2,1,1,1, name='g_b_h1_2', with_w=False)
+		d1_2 = deconv3d(d1, [tf.shape(h0)[0], 8, 16, 16, 64],4,4,4,2,2,2,1,1,1, name='g_b_h1_2', with_w=False)
 		d1_2 = tf.nn.relu(tf.contrib.layers.batch_norm(d1_2,scope='g_b_bn1_2_1'))
 		d1_2 = tf.concat([d1_2,i2_],axis=-1)                
 		#d1_2 = conv3d(d1_2,32,4,4,4,2,1,1,name='g_b_h1_c3_2')
@@ -367,7 +367,7 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#d3 = deconv2d(d2, options.df_dim*4, name='g_d3')
 		#d3 = tf.concat([instance_norm(tf.nn.relu(d3), 'g_bn_d3'),i3],axis=-1)
 		# d3 is (8 x 8 x self.gf_dim*8*2)
-		d1_3 = deconv3d(d1_2, [tf.shape(h0)[0], 16, 32, 32, 32],5,5,5,2,2,2,1,1,1, name='g_b_h1_3', with_w=False)
+		d1_3 = deconv3d(d1_2, [tf.shape(h0)[0], 16, 32, 32, 32],4,4,4,2,2,2,1,1,1, name='g_b_h1_3', with_w=False)
 		d1_3 = tf.nn.relu(tf.contrib.layers.batch_norm(d1_3,scope='g_b_bn1_3_1'))
 		d1_3 = tf.concat([d1_3,i1_],axis=-1)                
 		#d1_3 = conv3d(d1_3,16,4,4,4,2,1,1,name='g_b_h1_c3_3') 
@@ -377,7 +377,7 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#d4 = deconv2d(d3, options.df_dim*2, name='g_d4')
 		#d4 = tf.concat([instance_norm(tf.nn.relu(d4), 'g_bn_d4'),i2],axis=-1)
 		# d4 is (16 x 16 x self.gf_dim*8*2)
-		d1_4 = deconv3d(d1_3, [tf.shape(h0)[0], 32, 64, 64, 16],5,5,5,2,2,2,1,1,1, name='g_b_h1_4', with_w=False)
+		d1_4 = deconv3d(d1_3, [tf.shape(h0)[0], 32, 64, 64, 16],4,4,4,2,2,2,1,1,1, name='g_b_h1_4', with_w=False)
 		d1_4 = tf.nn.relu(tf.contrib.layers.batch_norm(d1_4,scope='g_b_bn1_4_1'))
 		d1_4 = tf.concat([d1_4,i0_],axis=-1)              
 		#d1_4 = conv3d(d1_4,64,4,4,4,2,1,1,name='g_b_h1_c3_4')
@@ -387,7 +387,7 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#d5 = deconv2d(d4, options.df_dim*2, name='g_d5')
 		#d5 = tf.concat([instance_norm(tf.nn.relu(d5), 'g_bn_d5'),i1],axis=-1)
 		# d5 is (32 x 32 x self.gf_dim*4*2)
-		h1_5 = deconv3d(d1_4, [tf.shape(h0)[0], 64, 128, 128, 3],5,5,5,2,2,2,1,1,1, name='g_b_h1_5', with_w=False)
+		h1_5 = deconv3d(d1_4, [tf.shape(h0)[0], 64, 128, 128, 3],4,4,4,2,2,2,1,1,1, name='g_b_h1_5', with_w=False)
         
 		#d6 = deconv2d(d5, options.df_dim, name='g_d6')
 		#d6 = tf.concat([instance_norm(d6, 'g_bn_d6'),i0],axis=-1)
@@ -404,39 +404,39 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#h0 = tf.nn.relu(tf.contrib.layers.batch_norm(h0, scope='g_f_bn0'))
 
 
-		h1 = deconv3d(h0, [tf.shape(h0)[0], 2, 4, 4, 256],5,5,5,2,2,2,1,1,1, name='g_f_h1', with_w=False)
+		h1 = deconv3d(h0, [tf.shape(h0)[0], 2, 4, 4, 256],4,4,4,2,2,2,1,1,1, name='g_f_h1', with_w=False)
 		h1 = tf.concat([tf.nn.relu(tf.contrib.layers.batch_norm(h1, scope='g_f_bn1')),i4_],axis=-1)
 		#h1 = conv3d(h1,256,4,4,4,2,1,1,name='g_f_h1_c0_1')
 		#h1 = tf.nn.relu(tf.contrib.layers.batch_norm(h1, scope='g_f_bn0_1_2'))
         
-		h1_1 = deconv3d(h1, [tf.shape(h0)[0], 4, 8, 8, 128],5,5,5,2,2,2,1,1,1, name='g_f_h1_1', with_w=False)
+		h1_1 = deconv3d(h1, [tf.shape(h0)[0], 4, 8, 8, 128],4,4,4,2,2,2,1,1,1, name='g_f_h1_1', with_w=False)
 		h1_1 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_1,scope='g_f_bn1_1_1'))
 		h1_1 = tf.concat([h1_1,i3_],axis=-1)        
 		#h1_1 = conv3d(h1_1,256,4,4,4,2,1,1,name='g_f_h1_c3_1')
 		#h1_1 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_1, scope='g_f_bn1_1_2'))
 
 
-		h1_2 = deconv3d(h1_1, [tf.shape(h0)[0], 8, 16, 16, 64],5,5,5,2,2,2,1,1,1, name='g_f_h1_2', with_w=False)
+		h1_2 = deconv3d(h1_1, [tf.shape(h0)[0], 8, 16, 16, 64],4,4,4,2,2,2,1,1,1, name='g_f_h1_2', with_w=False)
 		h1_2 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_2,scope='g_f_bn1_2_1'))
 		h1_2 = tf.concat([h1_2,i2_],axis=-1)                
 		#h1_2 = conv3d(h1_2,128,4,4,4,2,1,1,name='g_f_h1_c3_2')
 		#h1_2 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_2, scope='g_f_bn1_2_2'))
 
-		h1_3 = deconv3d(h1_2, [tf.shape(h0)[0], 16, 32, 32, 32],5,5,5,2,2,2,1,1,1, name='g_f_h1_3', with_w=False)
+		h1_3 = deconv3d(h1_2, [tf.shape(h0)[0], 16, 32, 32, 32],4,4,4,2,2,2,1,1,1, name='g_f_h1_3', with_w=False)
 		h1_3 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_3,scope='g_f_bn1_3_1'))
 		h1_3 = tf.concat([h1_3,i1_],axis=-1)                
 		#h1_3 = conv3d(h1_3,128,4,4,4,2,1,1,name='g_f_h1_c3_3')
 		#h1_3 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_3, scope='g_f_bn1_3_2'))
 
-		h1_4 = deconv3d(h1_3, [tf.shape(h0)[0], 32, 64, 64, 16],5,5,5,2,2,2,1,1,1, name='g_f_h1_4', with_w=False)
+		h1_4 = deconv3d(h1_3, [tf.shape(h0)[0], 32, 64, 64, 16],4,4,4,2,2,2,1,1,1, name='g_f_h1_4', with_w=False)
 		h1_4 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_4,scope='g_f_bn1_4_1'))
 		h1_4 = tf.concat([h1_4,i0_],axis=-1)                
 		#h1_4 = conv3d(h1_4,64,4,4,4,2,1,1,name='g_f_h1_c3_4')
 		#h1_4 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_4, scope='g_f_bn1_4_2'))
 
-		h1_5 = deconv3d(h1_4, [tf.shape(h0)[0], 64, 128, 128, 3],5,5,5,2,2,2,1,1,1, name='g_f_h1_5', with_w=False)
+		h1_5 = deconv3d(h1_4, [tf.shape(h0)[0], 64, 128, 128, 3],4,4,4,2,2,2,1,1,1, name='g_f_h1_5', with_w=False)
 
-		mask = deconv3d(h1_4,[tf.shape(h0)[0], 64, 128, 128, 3],5,5,5,2,2,2,1,1,1, name='g_mask1', with_w=False)
+		mask = deconv3d(h1_4,[tf.shape(h0)[0], 64, 128, 128, 3],4,4,4,2,2,2,1,1,1, name='g_mask1', with_w=False)
 		mask = tf.nn.softmax(mask,dim=-1)
 		mask1 = tf.expand_dims(mask[:,:,:,:,0],axis=-1)
 		mask2 = tf.expand_dims(mask[:,:,:,:,1],axis=-1)
@@ -449,7 +449,6 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		image_tile = tf.tile(tf.expand_dims(image,axis=1),[1,64,1,1,1])
         
 		static_video =  mask1 * gb4 + mask2 * gf4 + mask3 * image_tile
-
 
 		return gf4, mask1, mask2, mask3, gb4, static_video
 
