@@ -618,7 +618,7 @@ class cyclegan(object):
 						else:
 							                           
 						# Update Critic network # #self.d_clamp_op
-						####################
+						######################
 							print("====Update Critic====") 
 							for j in range(1):
 								_, summary_str, errD, errG, errL1, errP = self.sess.run([self.d_optim, self.d_sum,self.d_loss,self.g_loss,self.g_loss_l1, self.g_percetual_loss],\
