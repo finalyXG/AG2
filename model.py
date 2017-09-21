@@ -26,7 +26,7 @@ import random
 from transformer.spatial_transformer import transformer
 from transformer.tf_utils import weight_variable, bias_variable, dense_to_one_hot
 import imageio
-
+#b1
 class cyclegan1(object):
 	def __init__(self):
 		print 1
@@ -209,10 +209,10 @@ class cyclegan(object):
 		for i in range(15):
 			tmp = abs_criterion(self.combined_v_tf[:,0+i:49+i:16], self.combined_v_tf[:,0+i+1:49+i+1:16])
 			self.g_loss_consecutive += tmp
-		self.g_percetual_loss =  0.1 * abs_criterion(self.DA_real,self.DA_fake[0])
+		self.g_percetual_loss =  0.0 * abs_criterion(self.DA_real,self.DA_fake[0])
 		
 		self.g_loss = self.g_loss_fake \
-						+ 1.5 * self.g_loss_l1 + 1.5 * self.g_loss_consecutive / 16.0 + self.g_percetual_loss
+						+ 1.0 * self.g_loss_l1 + 2.0 * self.g_loss_consecutive / 16.0 + self.g_percetual_loss
 						#+ self.criterionGAN(self.real_video_tf, tf.zeros_like(self.real_video_tf))\
 ## (1,5,/ 16) -- no motion
 ## (1,2,/ 16) -- ?
@@ -442,7 +442,7 @@ class cyclegan(object):
 			 './slamdunk/[52wy][SlamDunk][029][H264].mp4',\
 			 './slamdunk/[52wy][SlamDunk][030][H264].mp4']
 
-		epoch = 35 
+		epoch = 45 
 		for epoch_batch in range(0,200): #args.epoch
 			idx = np.random.permutation(len(self.videos))
 			list_shot = []
