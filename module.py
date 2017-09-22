@@ -344,7 +344,7 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#d1 = deconv2d(tf.nn.relu(e9), options.df_dim*4, name='g_d1')
 		#d1 = tf.concat([tf.nn.relu(instance_norm(d1, 'g_bn_d1')),i5],axis=-1)
 		# d1 is (2 x 2 x self.gf_dim*8*2)
-		de_conv_ks = 5
+		de_conv_ks = 4
 		d1_1 = deconv3d(h0, [tf.shape(h0)[0], 2, 4, 4, 256],de_conv_ks,de_conv_ks,de_conv_ks,2,2,2,1,1,1, name='g_b_h1', with_w=False)
 		d1_1 = tf.concat([tf.nn.relu(tf.contrib.layers.batch_norm(d1_1, scope='g_b_bn1')),i4_],axis=-1)
 		#d1_1 = conv3d(d1_1,128,4,4,4,2,1,1,name='g_b_h1_c0_1')
