@@ -8,7 +8,7 @@ import crash_on_ipy
 import ipdb
 import imageio
 
-
+##
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--batch_size', dest='batch_size', type=int, default=4, help='# images in batch')
 parser.add_argument('--dataset_dir', dest='dataset_dir', default='horse2zebra2', help='path of the dataset')
