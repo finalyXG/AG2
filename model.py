@@ -112,22 +112,22 @@ class cyclegan(object):
 		self.real_image_crop = tf.reshape(transformer(self.real_data_image,mtx1,(self.options.image_size,self.options.image_size)),[self.options.batch_size,128,128,3])        
 		self.real_iamge_merge = tf.concat([self.real_image_crop, self.real_data_image],axis=-1)
         
-		self.g4,self.mask1,self.mask2,self.mask3,self.gb,self.fake_A_static = self.generatorA(self, self.real_image_crop,self.z, None, self.options, False,name="generatorB2A")
+		self.g4,self.mask1,self.mask2,self.mask3,self.gb,self.fake_A_static, self.m1_gb, self.m2_gf, self.m3_im = self.generatorA(self, self.real_image_crop,self.z, None, self.options, False,name="generatorB2A")
         
 		self.mtx, self.fake_camera_movement = self.generator_Camera(self, self.real_data_image, self.z,\
 			self.options, False, name="generator_camera")
 
 		self.combined_v = []
-		for i in range(64):
+		for i in range(32):
 			self.combined_v.append( transformer(self.fake_A_static[:,i],mtx1,out_size) )
 			self.combined_v[i] = tf.expand_dims(self.combined_v[i],1)
 
 		self.combined_v_tf = self.combined_v[0]
 		self.fake_camera_movement_tf = self.fake_camera_movement[0]
-		for i in range(1,64):
+		for i in range(1,32):
 			self.combined_v_tf = tf.concat([self.combined_v_tf,self.combined_v[i]],axis=1)
 			#self.fake_camera_movement_tf = tf.concat([self.fake_camera_movement_tf,self.fake_camera_movement[i] ], axis=1)
-		self.combined_v_tf = tf.reshape(self.combined_v_tf,(-1,64)+out_size+(3,))
+		self.combined_v_tf = tf.reshape(self.combined_v_tf,(-1,32)+out_size+(3,))
 		self.fake_A = self.combined_v_tf
 
 		#self.fake_A_staitc
@@ -170,8 +170,8 @@ class cyclegan(object):
         
 		self.disc_real, self.DA_real = self.discriminatorA(self.real_video_tf, self.real_image_crop, self.options, reuse=False, name="discriminatorA")         
 		self.disc_wi_rv, self.DA_wi_rv = self.discriminatorA(self.real_video_tf, self.fake_data_image, self.options, reuse=True, name="discriminatorA")       
-		for i in range(16):
-			tmp1,tmp2 = self.discriminatorA(self.combined_v_tf[:,i:49+i:16], self.real_image_crop, self.options, reuse=True, name="discriminatorA")
+		for i in range(8):
+			tmp1,tmp2 = self.discriminatorA(self.combined_v_tf[:,i:25+i:8], self.real_image_crop, self.options, reuse=True, name="discriminatorA")
 			self.disc_fake.append(tmp1)
 			self.DA_fake.append(tmp2)
 
@@ -191,28 +191,28 @@ class cyclegan(object):
 		#self.d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit , labels=tf.zeros_like(fake_logit) )) 
 		self.d_loss_fake = 0
 
-		for i in range(16):
+		for i in range(8):
 			tmp = self.criterionGAN(self.disc_fake[i], tf.zeros_like(self.disc_fake[i]))
 			self.d_loss_fake += tmp
-		self.d_loss = self.d_loss_true + self.d_loss_fake / 16.0
+		self.d_loss = self.d_loss_true + self.d_loss_fake / 8.0
 		#self.d_loss = self.d_loss_true + (self.d_loss_fake + self.d_loss_wi_rv) / 2.0
 		#self.d_loss = tf.reduce_mean(self.DA_wi_rv) + tf.reduce_mean(fake_logit) - tf.reduce_mean(true_logit)
 		 #+ abs_criterion(self.combined_v_tf,self.real_video_tf)
 		#self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit , labels=tf.ones_like(fake_logit) )) +\
 			#100 * tf.reduce_mean(tf.abs(self.real_video_tf - self.combined_v_tf))
 		#self.g_loss = -tf.reduce_mean(fake_logit) #+ tf.reduce_mean(tf.abs(self.real_video_tf - self.combined_v_tf))
-		self.g_loss_l1 = abs_criterion(self.combined_v_tf[:,0:49:16], self.real_video_tf)
+		self.g_loss_l1 = abs_criterion(self.combined_v_tf[:,0:25:8], self.real_video_tf)
 		self.g_loss_fake = 0
-		for i in range(16):
+		for i in range(8):
 			tmp = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit[i] , labels=tf.ones_like(fake_logit[i]) ))
 		self.g_loss_consecutive = 0
-		for i in range(15):
-			tmp = abs_criterion(self.combined_v_tf[:,0+i:49+i:16], self.combined_v_tf[:,0+i+1:49+i+1:16])
+		for i in range(8 - 1):
+			tmp = abs_criterion(self.combined_v_tf[:,0+i:25+i:8], self.combined_v_tf[:,0+i+1:25+i+1:8])
 			self.g_loss_consecutive += tmp
-		self.g_percetual_loss =  2.0 * abs_criterion(self.DA_real,self.DA_fake[0])
+		self.g_percetual_loss =  0.1 * abs_criterion(self.DA_real,self.DA_fake[0])
 		
 		self.g_loss = self.g_loss_fake \
-						+ 5.0 * self.g_loss_l1 + 2.0 * self.g_loss_consecutive / 16.0 + self.g_percetual_loss
+						+ 0.006 * self.g_loss_l1 + 1.0 * self.g_loss_consecutive / 8.0 + self.g_percetual_loss
 						#+ self.criterionGAN(self.real_video_tf, tf.zeros_like(self.real_video_tf))\
 ## (1,2,/16,0) -- no motion
 ## (0.01,2,/16,0) -- no motion
@@ -220,8 +220,9 @@ class cyclegan(object):
 ## (5.0,2,/16,2)-- some motion
 ## (2.0,2,/16,2)-- no motion
 ## (2.0, 1.5,/16, 1.0) -- no motion
+## (0.5, 1.5, /8, 0.1) -- current
 
-
+## (1, 0.005, 1.0, /16.0, 0.01)
 
 
 		#alpha = tf.random_uniform(
@@ -378,13 +379,13 @@ class cyclegan(object):
 
 	def train(self, args):
 		self.setup_model(args)         
-		counter = 1
+		counter = 0
 		start_time = time.time()	
 		flag_camera = 0
 							
 		"""Train cyclegan"""
 		#laurence 
-		self.shot_len = 2
+		self.shot_len = 4
 
 		self.video_bds =\
 			['./slamdunk/001.h5.npy',\
@@ -471,7 +472,8 @@ class cyclegan(object):
 					merge_image = np.zeros((self.batch_size,self.image_size,self.image_size,3))
 					merge_image_false = np.zeros((self.batch_size,self.image_size,self.image_size,3))
 
-				a_video = np.zeros((self.batch_size,self.frames_nb,self.image_size,self.image_size,self.input_c_dim))		 
+				a_video = np.zeros((self.batch_size,self.frames_nb,self.image_size,self.image_size,self.input_c_dim))		
+
 				#for i in range(start_i,self.count_end - 4,4):
 				for i in range(2,self.bd.shape[0] - 1,1):
 					previous_shot_f1 = self.bd[i - 1] + np.random.randint(4,size=1)[0]
@@ -495,7 +497,7 @@ class cyclegan(object):
 					_,next_frame ,_ = self.processframe(next_frame)
 
 
-					l = range(current_shot_f1+1,current_shot_f1+5)
+					l = range(current_shot_f1+1,current_shot_f1+6)
 					lt = random.sample(l,self.frames_nb )
 					lt.sort()
 					lt[0] = l[0]
@@ -514,38 +516,8 @@ class cyclegan(object):
 						merge_image_one = current_frame
 						merge_image_one_false = pre_frame
 
-					a_video_one = shot	
-					first_frame_crop=[]	
-
-					over = 1
-					if over == 0:
-						real_image = []
-						
-						for j in range(i,i + self.shot_len):
-							if j in self.bd:
-								a_video_one = []
-								break
-							ret,frame = cap.read()
-							frame,frame_rs,frames_crop = self.processframe(frame)
-
-							if j == i:
-								real_image = frame
-								m_image = frame_rs
-								first_frame_crop.append(frames_crop)
-
-							if j == i or j == i + self.shot_len - 1:
-								a_video_one.append(frames_crop)
-							
-						
-						if a_video_one == []:
-							continue
-
-						tmp = a_video_one[1] - a_video_one[0]
-
-						#if  abs(np.mean(tmp)) < 0.0001 or abs(np.mean(a_video_one[1])) < 0.0005 :
-						#	a_video_one == []
-						#	continue
-
+					a_video_one = shot
+					first_frame_crop=[]                   
 
 					counter += 1
 					tmp_i = counter % self.batch_size
@@ -561,7 +533,6 @@ class cyclegan(object):
 						Diter = 10
 					else:
 						Diter = 5
-					
 						
 					pred_video = np.array(a_video)
 
@@ -606,7 +577,7 @@ class cyclegan(object):
 						#self.writer.add_summary(summary_str, counter)
 
 					if flag_camera == 0:#self.fake_A fake_A
-						fake_A,g4,gmask,gmask2,gmask3,gb,real_video_tf,real_image_tf,real_image_crop = self.sess.run([self.fake_A,self.g4,self.mask1,self.mask2,self.mask3,self.gb,self.real_video_tf,self.real_data_image,self.real_image_crop],feed_dict={self.real_data_image: merge_image,self.z:batch_z,self.real_data_video:a_video})
+						fake_A,g4,gmask,gmask2,gmask3,gb,real_video_tf,real_image_tf,real_image_crop, m1_gb, m2_gf, m3_im = self.sess.run([self.fake_A,self.g4,self.mask1,self.mask2,self.mask3,self.gb,self.real_video_tf,self.real_data_image,self.real_image_crop,self.m1_gb, self.m2_gf, self.m3_im],feed_dict={self.real_data_image: merge_image,self.z:batch_z,self.real_data_video:a_video})
 						g4 = np.array(g4)
 						gmask = np.array(gmask)
 						gb = np.array(gb)
@@ -628,30 +599,30 @@ class cyclegan(object):
 						######################
 							print("====Update Critic====") 
 							for j in range(1):
-								_, summary_str, errD, errG, errL1, errP = self.sess.run([self.d_optim, self.d_sum,self.d_loss,self.g_loss,self.g_loss_l1, self.g_percetual_loss],\
-													feed_dict={self.z: batch_z,\
-													self.fake_data_image: merge_image_false,\
-													self.real_data_image: merge_image,self.real_data_video:a_video}) #
-								self.writer.add_summary(summary_str, counter) 
-							print("errD: [%4.4f] , errG: [%4.4f], errL1: [%4.4f], errP: [%4.4f]" % (errD,errG,errL1,errP))
+								1;#_, summary_str, errD, errG, errL1, errP = self.sess.run([self.d_optim, self.d_sum,self.d_loss,self.g_loss,self.g_loss_l1, self.g_percetual_loss],\
+								#					feed_dict={self.z: batch_z,\
+								#					self.fake_data_image: merge_image_false,\
+								#					self.real_data_image: merge_image,self.real_data_video:a_video}) #
+								#self.writer.add_summary(summary_str, counter) 
+							#print("errD: [%4.4f] , errG: [%4.4f], errL1: [%4.4f], errP: [%4.4f]" % (errD,errG,errL1,errP))
 						####################
 						# Update G network #
 						####################
-							for j in range(Diter):
+							for j in range(5):
 								print("====Update Generator====")
-								_, summary_str, errD, errG, errL1, errP = self.sess.run([self.g_optim, self.g_sum, self.d_loss,self.g_loss,self.g_loss_l1,self.g_percetual_loss],\
-													  feed_dict={ self.z: batch_z,\
-													  self.fake_data_image: merge_image_false,\
-													  self.real_data_image: merge_image,self.real_data_video:a_video})
-								self.writer.add_summary(summary_str, counter)
-							print("errD: [%4.4f] , errG: [%4.4f], errL1: [%4.4f], errP: [%4.4f]" % (errD,errG,errL1,errP)) 
+								#_, summary_str, errD, errG, errL1, errP = self.sess.run([self.g_optim, self.g_sum, self.d_loss,self.g_loss,self.g_loss_l1,self.g_percetual_loss],\
+								#					  feed_dict={ self.z: batch_z,\
+								#					  self.fake_data_image: merge_image_false,\
+								#					  self.real_data_image: merge_image,self.real_data_video:a_video})
+								#self.writer.add_summary(summary_str, counter)
+							#print("errD: [%4.4f] , errG: [%4.4f], errL1: [%4.4f], errP: [%4.4f]" % (errD,errG,errL1,errP)) 
 
 							print(("Epoch: [%2d] [%6d/%6d] [%9d] time: %4.4f" \
 						   % (epoch, i, self.count_end, counter, time.time() - start_time)))
 					#if  counter == 2:
 					#    self.sample_model(args.sample_dir, epoch, i)
 					tmp_rand = random.random()
-					if tmp_rand <= 0.3:
+					if tmp_rand <= 10.2:
 						#self.validate(epoch,args)
 						tmp_dir = './{}/{}/'.format(args.sample_dir,epoch) 
 						if not os.path.exists(tmp_dir):

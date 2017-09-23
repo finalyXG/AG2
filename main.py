@@ -11,9 +11,9 @@ import imageio
 ##
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--batch_size', dest='batch_size', type=int, default=4, help='# images in batch')
-parser.add_argument('--dataset_dir', dest='dataset_dir', default='horse2zebra2', help='path of the dataset')
+parser.add_argument('--dataset_dir', dest='dataset_dir', default='best_v1', help='path of the dataset')
 parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', default='./checkpoint1', help='models are saved here')
-parser.add_argument('--sample_dir', dest='sample_dir', default='./sample2', help='sample are saved here')
+parser.add_argument('--sample_dir', dest='sample_dir', default='./sample1', help='sample are saved here')
 
 #parser.add_argument('--dataset_dir', dest='dataset_dir', default='horse2zebra_wgan', help='path of the dataset')
 parser.add_argument('--epoch', dest='epoch', type=int, default=200, help='# of epoch')
@@ -36,7 +36,7 @@ parser.add_argument('--input_ic', dest='input_ic', type=int, default=9, help='# 
 
 parser.add_argument('--output_nc', dest='output_nc', type=int, default=3, help='# of output image channels')
 parser.add_argument('--niter', dest='niter', type=int, default=200, help='# of iter at starting learning rate')
-parser.add_argument('--lr', dest='lr', type=float, default=5e-5, help='initial learning rate for adam')
+parser.add_argument('--lr', dest='lr', type=float, default=2e-4, help='initial learning rate for adam')
 parser.add_argument('--beta1', dest='beta1', type=float, default=0.5, help='momentum term of adam')
 parser.add_argument('--flip', dest='flip', type=bool, default=True, help='if flip the images for data argumentation')
 parser.add_argument('--which_direction', dest='which_direction', default='AtoB', help='AtoB or BtoA')

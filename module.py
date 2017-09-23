@@ -344,7 +344,7 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#d1 = deconv2d(tf.nn.relu(e9), options.df_dim*4, name='g_d1')
 		#d1 = tf.concat([tf.nn.relu(instance_norm(d1, 'g_bn_d1')),i5],axis=-1)
 		# d1 is (2 x 2 x self.gf_dim*8*2)
-		de_conv_ks = 4
+		de_conv_ks = 5
 		d1_1 = deconv3d(h0, [tf.shape(h0)[0], 2, 4, 4, 256],de_conv_ks,de_conv_ks,de_conv_ks,2,2,2,1,1,1, name='g_b_h1', with_w=False)
 		d1_1 = tf.concat([tf.nn.relu(tf.contrib.layers.batch_norm(d1_1, scope='g_b_bn1')),i4_],axis=-1)
 		#d1_1 = conv3d(d1_1,128,4,4,4,2,1,1,name='g_b_h1_c0_1')
@@ -388,7 +388,7 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#d5 = deconv2d(d4, options.df_dim*2, name='g_d5')
 		#d5 = tf.concat([instance_norm(tf.nn.relu(d5), 'g_bn_d5'),i1],axis=-1)
 		# d5 is (32 x 32 x self.gf_dim*4*2)
-		h1_5 = deconv3d(d1_4, [tf.shape(h0)[0], 64, 128, 128, 3],de_conv_ks,de_conv_ks,de_conv_ks,2,2,2,1,1,1, name='g_b_h1_5', with_w=False)
+		h1_5 = deconv3d(d1_4, [tf.shape(h0)[0], 32, 128, 128, 3],de_conv_ks,de_conv_ks,de_conv_ks,1,2,2,1,1,1, name='g_b_h1_5', with_w=False)
         
 		#d6 = deconv2d(d5, options.df_dim, name='g_d6')
 		#d6 = tf.concat([instance_norm(d6, 'g_bn_d6'),i0],axis=-1)
@@ -435,9 +435,9 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#h1_4 = conv3d(h1_4,64,4,4,4,2,1,1,name='g_f_h1_c3_4')
 		#h1_4 = tf.nn.relu(tf.contrib.layers.batch_norm(h1_4, scope='g_f_bn1_4_2'))
 
-		h1_5 = deconv3d(h1_4, [tf.shape(h0)[0], 64, 128, 128, 3],de_conv_ks,de_conv_ks,de_conv_ks,2,2,2,1,1,1, name='g_f_h1_5', with_w=False)
+		h1_5 = deconv3d(h1_4, [tf.shape(h0)[0], 32, 128, 128, 3],de_conv_ks,de_conv_ks,de_conv_ks,1,2,2,1,1,1, name='g_f_h1_5', with_w=False)
 
-		mask = deconv3d(h1_4,[tf.shape(h0)[0], 64, 128, 128, 3],de_conv_ks,de_conv_ks,de_conv_ks,2,2,2,1,1,1, name='g_mask1', with_w=False)
+		mask = deconv3d(h1_4,[tf.shape(h0)[0], 32, 128, 128, 3],de_conv_ks,de_conv_ks,de_conv_ks,1,2,2,1,1,1, name='g_mask1', with_w=False)
 		mask = tf.nn.softmax(mask,dim=-1)
 		mask1 = tf.expand_dims(mask[:,:,:,:,0],axis=-1)
 		mask2 = tf.expand_dims(mask[:,:,:,:,1],axis=-1)
@@ -447,11 +447,15 @@ def videogan_generator(self, image,z,mtx, options, reuse = False, name="generato
 		#return gf4, mask1, mask2, mask3, gb4, gf4
 		#gb4 = tf.reshape(gb4, [-1, 1, options.image_size, options.image_size, 3])
 		#gb4 = tf.tile(gb4, [1, options.frames_nb, 1, 1, 1])
-		image_tile = tf.tile(tf.expand_dims(image,axis=1),[1,64,1,1,1])
+		image_tile = tf.tile(tf.expand_dims(image,axis=1),[1,32,1,1,1])
+		m1_gb = mask1 * gb4
+		m2_gf = mask2 * gf4
+		m3_im = mask3 * image_tile
         
-		static_video =  mask1 * gb4 + mask2 * gf4 + mask3 * image_tile
+        
+		static_video = m1_gb  + m2_gf + m3_im
 
-		return gf4, mask1, mask2, mask3, gb4, static_video
+		return gf4, mask1, mask2, mask3, gb4, static_video, m1_gb, m2_gf, m3_im
 
 
 
