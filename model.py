@@ -117,19 +117,22 @@ class cyclegan(object):
 		self.mtx, self.fake_camera_movement = self.generator_Camera(self, self.real_data_image, self.z,\
 			self.options, False, name="generator_camera")
 
-		self.combined_v = []
-		for i in range(32):
-			self.combined_v.append( transformer(self.fake_A_static[:,i],mtx1,out_size) )
-			self.combined_v[i] = tf.expand_dims(self.combined_v[i],1)
+		flag_32 = False
+		if flag_32 == True:
+			self.combined_v = []
+			for i in range(32):
+				self.combined_v.append( transformer(self.fake_A_static[:,i],mtx1,out_size) )
+				self.combined_v[i] = tf.expand_dims(self.combined_v[i],1)
 
-		self.combined_v_tf = self.combined_v[0]
-		self.fake_camera_movement_tf = self.fake_camera_movement[0]
-		for i in range(1,32):
-			self.combined_v_tf = tf.concat([self.combined_v_tf,self.combined_v[i]],axis=1)
-			#self.fake_camera_movement_tf = tf.concat([self.fake_camera_movement_tf,self.fake_camera_movement[i] ], axis=1)
-		self.combined_v_tf = tf.reshape(self.combined_v_tf,(-1,32)+out_size+(3,))
-		self.fake_A = self.combined_v_tf
-
+			self.combined_v_tf = self.combined_v[0]
+			self.fake_camera_movement_tf = self.fake_camera_movement[0]
+			for i in range(1,32):
+				self.combined_v_tf = tf.concat([self.combined_v_tf,self.combined_v[i]],axis=1)
+				#self.fake_camera_movement_tf = tf.concat([self.fake_camera_movement_tf,self.fake_camera_movement[i] ], axis=1)
+			self.combined_v_tf = tf.reshape(self.combined_v_tf,(-1,32)+out_size+(3,))
+			self.fake_A = self.combined_v_tf
+		self.fake_A = self.fake_A_static
+		self.combined_v_tf = self.fake_A_static
 		#self.fake_A_staitc
 		#self.fake_camera_movement_tf
 		#self.combined_v_tf
@@ -169,13 +172,14 @@ class cyclegan(object):
 
         
 		self.disc_real, self.DA_real = self.discriminatorA(self.real_video_tf, self.real_image_crop, self.options, reuse=False, name="discriminatorA")         
-		self.disc_wi_rv, self.DA_wi_rv = self.discriminatorA(self.real_video_tf, self.fake_data_image, self.options, reuse=True, name="discriminatorA")       
-		for i in range(8):
-			tmp1,tmp2 = self.discriminatorA(self.combined_v_tf[:,i:25+i:8], self.real_image_crop, self.options, reuse=True, name="discriminatorA")
-			self.disc_fake.append(tmp1)
-			self.DA_fake.append(tmp2)
+		self.disc_wi_rv, self.DA_wi_rv = self.discriminatorA(self.real_video_tf, self.fake_data_image, self.options, reuse=True, name="discriminatorA")
+		#if flag_32 == True:
+		#	for i in range(8):
+		#		tmp1,tmp2 = self.discriminatorA(self.combined_v_tf[:,i:25+i:8], self.real_image_crop, self.options, reuse=True, name="discriminatorA")
+		#		self.disc_fake.append(tmp1)
+		#		self.DA_fake.append(tmp2)
 
-		#self.disc_fake, self.DA_fake = self.discriminatorA(self.combined_v_tf, self.real_data_image, self.options, reuse=False, name="discriminatorA")
+		self.disc_fake, self.DA_fake = self.discriminatorA(self.combined_v_tf, self.real_data_image, self.options, reuse=True, name="discriminatorA")
 		fake_logit = self.DA_fake
 		true_logit = self.DA_real
         
@@ -188,32 +192,35 @@ class cyclegan(object):
         
 		self.d_loss_true = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=self.disc_real , labels=tf.ones_like(self.disc_real) ))
 		self.d_loss_wi_rv= tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=self.disc_wi_rv , labels=tf.zeros_like(self.disc_wi_rv) ))
-		#self.d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit , labels=tf.zeros_like(fake_logit) )) 
-		self.d_loss_fake = 0
-
-		for i in range(8):
-			tmp = self.criterionGAN(self.disc_fake[i], tf.zeros_like(self.disc_fake[i]))
-			self.d_loss_fake += tmp
-		self.d_loss = self.d_loss_true + self.d_loss_fake / 8.0
-		#self.d_loss = self.d_loss_true + (self.d_loss_fake + self.d_loss_wi_rv) / 2.0
+		self.d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit , labels=tf.zeros_like(fake_logit) )) 
+		#self.d_loss_fake = 0
+		#if flag_32 == True:
+		#	for i in range(8):
+		#		tmp = self.criterionGAN(self.disc_fake[i], tf.zeros_like(self.disc_fake[i]))
+		#		self.d_loss_fake += tmp
+		#	self.d_loss = self.d_loss_true + self.d_loss_fake / 8.0
+		self.d_loss = self.d_loss_true + self.d_loss_fake + self.d_loss_wi_rv
 		#self.d_loss = tf.reduce_mean(self.DA_wi_rv) + tf.reduce_mean(fake_logit) - tf.reduce_mean(true_logit)
 		 #+ abs_criterion(self.combined_v_tf,self.real_video_tf)
-		#self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit , labels=tf.ones_like(fake_logit) )) +\
-			#100 * tf.reduce_mean(tf.abs(self.real_video_tf - self.combined_v_tf))
+            
+            
+		self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=self.disc_fake , labels=tf.ones_like(self.disc_fake) )) +\
+		0.006 * tf.reduce_mean(tf.abs(self.real_video_tf - self.combined_v_tf))
+        
 		#self.g_loss = -tf.reduce_mean(fake_logit) #+ tf.reduce_mean(tf.abs(self.real_video_tf - self.combined_v_tf))
-		self.g_loss_l1 = abs_criterion(self.combined_v_tf[:,0:25:8], self.real_video_tf)
-		self.g_loss_fake = 0
-		for i in range(8):
-			tmp = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit[i] , labels=tf.ones_like(fake_logit[i]) ))
-		self.g_loss_consecutive = 0
-		for i in range(8 - 1):
-			tmp = abs_criterion(self.combined_v_tf[:,0+i:25+i:8], self.combined_v_tf[:,0+i+1:25+i+1:8])
-			self.g_loss_consecutive += tmp
-		self.g_percetual_loss =  0.1 * abs_criterion(self.DA_real,self.DA_fake[0])
+		#self.g_loss_l1 = abs_criterion(self.combined_v_tf[:,0:25:8], self.real_video_tf)
+		#self.g_loss_fake = 0
+		#for i in range(8):
+		#	tmp = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits( logits=fake_logit[i] , labels=tf.ones_like(fake_logit[i]) ))
+		#self.g_loss_consecutive = 0
+		#for i in range(8 - 1):
+		#	tmp = abs_criterion(self.combined_v_tf[:,0+i:25+i:8], self.combined_v_tf[:,0+i+1:25+i+1:8])
+		#	self.g_loss_consecutive += tmp
+		#self.g_percetual_loss =  0.1 * abs_criterion(self.DA_real,self.DA_fake[0])
 		
-		self.g_loss = self.g_loss_fake \
-						+ 0.006 * self.g_loss_l1 + 1.0 * self.g_loss_consecutive / 8.0 + self.g_percetual_loss
-						#+ self.criterionGAN(self.real_video_tf, tf.zeros_like(self.real_video_tf))\
+		#self.g_loss = self.g_loss_fake \
+		#				+ 0.006 * self.g_loss_l1 + 1.0 * self.g_loss_consecutive / 8.0 + self.g_percetual_loss
+		#				#+ self.criterionGAN(self.real_video_tf, tf.zeros_like(self.real_video_tf))\
 ## (1,2,/16,0) -- no motion
 ## (0.01,2,/16,0) -- no motion
 ## (5.0,2,/16,0)-- no motion
@@ -221,7 +228,6 @@ class cyclegan(object):
 ## (2.0,2,/16,2)-- no motion
 ## (2.0, 1.5,/16, 1.0) -- no motion
 ## (0.5, 1.5, /8, 0.1) -- current
-
 ## (1, 0.005, 1.0, /16.0, 0.01)
 
 
