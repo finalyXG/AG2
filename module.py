@@ -9,7 +9,6 @@ from keras.layers.convolutional import Conv3D
 from keras import backend as K
 from transformer.spatial_transformer import transformer
 from transformer.tf_utils import weight_variable, bias_variable, dense_to_one_hot
-import ipdb
 	
 def discriminator_image(frame, image, options, reuse=False, name="discriminatorA"):
 
@@ -288,7 +287,66 @@ def videogan_camera(self,image,z,options,reuse=False,name="generatorC"):
 		else:
 			assert tf.get_variable_scope().reuse == False  
 
+def videogan_generator_shiftpixel(self, image,z,mtx, options, reuse = False, name="generatorA"):
+	mtx = None
+	with tf.variable_scope(name):
+		if reuse:
+			tf.get_variable_scope().reuse_variables()
+		else:
+			assert tf.get_variable_scope().reuse == False        
+		i0 = lrelu(conv2d(image, 4,4,2, name='ci_i0_conv_om'))
+		i1 = lrelu(instance_norm(conv2d(i0, 32 , 4, 2, name='ci_i1_conv_om'), 'ci_bni1_om'))
+		i2 = lrelu(instance_norm(conv2d(i1, 64 , 4, 2, name='ci_i2_conv_om'), 'ci_bni2_om'))
+		i3 = lrelu(instance_norm(conv2d(i2, 128 , 4, 2,name='ci_i3_conv_om'), 'ci_bni3_om'))
+		i4 = lrelu(instance_norm(conv2d(i3, 256 , 4, 2,name='ci_i4_conv_om'), 'ci_bni4_om'))
+		i5 = lrelu(instance_norm(conv2d(i4, 512 , 4, 2,name='ci_i5_conv_om'), 'ci_bni5_om'))
+		patch_size = 8
+		filter_size = 4
+		image_patches = tf.extract_image_patches(image, [1, patch_size, patch_size, 1], [1,patch_size,patch_size,1], [1,1,1,1], padding='SAME')
+		lin1 = tf.nn.relu(tf.contrib.layers.batch_norm(linear(tf.contrib.layers.flatten(i5), ((self.image_size / patch_size)**2)*(filter_size**2), 'ci_lin1_om', with_w=False),scope="ci_bnlin1_om" ))
+        
+		predicted_filter = tf.reshape(lin1,[self.batch_size, int(self.image_size / patch_size), int(self.image_size / patch_size) , filter_size**2 ])
+		predicted_filter_flat = tf.reshape(predicted_filter, [self.batch_size, -1 ,filter_size,filter_size])
+		image_patches_flat = tf.reshape(image_patches, [self.batch_size, int( (self.image_size/patch_size)**2 ),-1])
+		
+		transformed = []
+		for i in range(tf.shape(image_patches_flat)[0].eval()):
+			for j in range(tf.shape(image_patches_flat)[1].eval()):
+                
+				k = tf.constant([
+				[0, 0, 0],
+				[0, 1, 0],
+				[0, 0, 0]
+				], dtype=tf.float32, name='k')
+                
+				ii = tf.constant([
+				[1, 1, 1, 2],
+				[4, 1, 0, 2], 
+				[4, 2, 4, 2],
+				[4, 3, 3, 3]
+], dtype=tf.float32, name='i')
 
+				kernel = tf.reshape(k, [3, 3, 1, 1], name='kernel')
+				image  = tf.pad(tf.reshape(ii, [1, 4, 4, 1], name='image'),[[0,0],[1,1],[1,1],[0,0]],"SYMMETRIC")
+
+				image = tf.tile(image,[1,1,1,3])
+				kernel = tf.tile(kernel,[1,1,3,1])
+				tmp1 = tf.nn.depthwise_conv2d(image, kernel, [1, 1, 1, 1], "VALID")
+				pdb.set_trace()
+				image  = tf.pad(tf.reshape(ii, [1, 4, 4, 1], name='image'),[[0,0],[1,1],[1,1],[0,0]],"SYMMETRIC")
+
+				tmp = tf.expand_dims(tf.expand_dims(predicted_filter_flat[i,j],axis=-1),axis=-1)
+				tmp = tf.tile(tmp,[1,1,3,1])
+				tmp_img = tf.reshape(image_patches_flat[i,j],[1, patch_size, patch_size, 3])                
+				#w = tf.get_variable('w', initializer=tf.to_float(predicted_filter_flat[i,j]))
+				dump = tf.nn.depthwise_conv2d(tmp_img, tmp, [1, 1, 1, 1], 'SAME')
+                
+				
+                
+                
+		print(1)
+        
+        
 def videogan_generator(self, image,z,mtx, options, reuse = False, name="generatorA"):
 	mtx = None
 	with tf.variable_scope(name):

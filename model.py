@@ -45,7 +45,7 @@ class cyclegan(object):
 		self.L1_lambda = args.L1_lambda
 		self.dataset_dir = args.dataset_dir
 		self.frames_nb = args.frames_nb
-		self.videogan_generator = videogan_generator 
+		#self.videogan_generator = videogan_generator 
 
 		self.discriminatorA = VideoCritic
 		self.discriminatorB = discriminator_image
@@ -55,7 +55,7 @@ class cyclegan(object):
 
 		if args.use_resnet:
 			#self.generatorA = generator_resnet_video
-			self.generatorA = videogan_generator
+			self.generatorA = videogan_generator_shiftpixel#videogan_generator
 			self.generatorB = None
 			self.generator_Camera = camera_movement_generator
 		else:
@@ -382,6 +382,7 @@ class cyclegan(object):
 		counter = 0
 		start_time = time.time()	
 		flag_camera = 0
+		pdb.set_trace()
 							
 		"""Train cyclegan"""
 		#laurence 
