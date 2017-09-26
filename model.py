@@ -232,7 +232,7 @@ class cyclegan(object):
 		self.saver = tf.train.Saver()
 
 		self.pool = ImagePool(args.max_size)
-		flag_optim = False
+		flag_optim = True
 		if flag_optim == True:
 			self.g_b2a_optim = tf.train.AdamOptimizer(args.lr, beta1=args.beta1)\
 				.minimize(self.g_loss, var_list=self.g_vars_b2a)
@@ -240,9 +240,10 @@ class cyclegan(object):
 				.minimize(self.g_loss_l1, var_list=self.g_vars_b2a)          
 			self.da_optim = tf.train.AdamOptimizer(args.lr, beta1=args.beta1)\
 				.minimize(self.d_loss, var_list=self.da_vars)
+			self.d_optim = self.da_optim
+			self.g_optim = self.g_b2a_optim
 
-		#self.d_optim = self.da_optim
-		#self.g_optim = self.g_b2a_optim
+		
 
 		init_op = tf.global_variables_initializer()
 
@@ -483,7 +484,7 @@ class cyclegan(object):
 						#errL1 = self.sess.run([self.g_loss_l1],feed_dict={ self.z: batch_z,\
 						#							  self.fake_data_image: merge_image_false,\
 						#							  self.real_data_image: merge_image,self.real_data_video:a_video})
-						if 1000 > 560.5:
+						if 10 > 560.5:
 							print("====Update by L1 loss====") 
 							_ = self.sess.run([self.g_l1_optim],feed_dict={ self.z: batch_z,\
 													  self.fake_data_image: merge_image_false,\
@@ -506,7 +507,7 @@ class cyclegan(object):
 						####################
 							for j in range(5):
 								print("====Update Generator====")
-								_, summary_str, errD, errG, errL1, errP = self.sess.run([self.g_optim, self.g_sum, self.d_loss,self.g_loss,self.g_loss_l1,self.g_percetual_loss],\
+								_, summary_str, errD, errG, errL1 = self.sess.run([self.g_optim, self.g_sum, self.d_loss,self.g_loss,self.g_loss_l1],\
 													  feed_dict={ self.z: batch_z,\
 													  self.fake_data_image: merge_image_false,\
 													  self.real_data_image: merge_image,self.real_data_video:a_video})
