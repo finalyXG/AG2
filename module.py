@@ -293,41 +293,60 @@ def videogan_generator_shiftpixel(self, image,z,mtx, options, reuse = False, nam
 		if reuse:
 			tf.get_variable_scope().reuse_variables()
 		else:
-			assert tf.get_variable_scope().reuse == False        
+			assert tf.get_variable_scope().reuse == False 
+
+
+            
 		i0 = lrelu(conv2d(image, 4,4,2, name='ci_i0_conv_om'))
 		i1 = lrelu(instance_norm(conv2d(i0, 32 , 4, 2, name='ci_i1_conv_om'), 'ci_bni1_om'))
 		i2 = lrelu(instance_norm(conv2d(i1, 64 , 4, 2, name='ci_i2_conv_om'), 'ci_bni2_om'))
 		i3 = lrelu(instance_norm(conv2d(i2, 128 , 4, 2,name='ci_i3_conv_om'), 'ci_bni3_om'))
 		i4 = lrelu(instance_norm(conv2d(i3, 256 , 4, 2,name='ci_i4_conv_om'), 'ci_bni4_om'))
 		i5 = lrelu(instance_norm(conv2d(i4, 512 , 4, 2,name='ci_i5_conv_om'), 'ci_bni5_om'))
-		patch_size = 8
+		patch_size = 64
 		filter_size = 5
 		image_patches = tf.extract_image_patches(image, [1, patch_size, patch_size, 1], [1,patch_size,patch_size,1], [1,1,1,1], padding='SAME')
-		lin1 = tf.nn.relu(tf.contrib.layers.batch_norm(linear(tf.contrib.layers.flatten(i5), (self.frames_nb * (self.image_size / patch_size)**2)*(filter_size**2), 'ci_lin1_om', with_w=False),scope="ci_bnlin1_om" ))
+        
+		pad = [[0,0],[0,0]]
+		patches = tf.space_to_batch_nd(image,[patch_size,patch_size],pad)
+		patches = tf.split(patches,patch_size*patch_size,0)
+		patches = tf.stack(patches,3)   
+		patches = tf.reshape(patches,[self.batch_size,int((self.image_size/patch_size)**2),patch_size,patch_size,3])
+
+		lin1 = tf.contrib.layers.batch_norm(linear(tf.contrib.layers.flatten(i5), (self.frames_nb * (self.image_size / patch_size)**2)*(filter_size**2), 'ci_lin1_om', with_w=False),scope="ci_bnlin1_om" )
         
 		predicted_filter = tf.reshape(lin1,[self.batch_size, self.frames_nb, int(self.image_size / patch_size), int(self.image_size / patch_size) , filter_size**2 ])
+		predicted_filter = tf.nn.softmax(predicted_filter,dim=-1)
 		predicted_filter_flat = tf.reshape(predicted_filter, [self.batch_size, self.frames_nb, -1 ,filter_size,filter_size])
-		image_patches_flat = tf.reshape(image_patches, [self.batch_size, int( (self.image_size/patch_size)**2 ),-1])
-		
-		transformed = []
-		for i in range(tf.shape(image_patches_flat)[0].eval()):
-			for t in range(self.frames_nb):
-				for j in range(tf.shape(image_patches_flat)[1].eval()):
-					#image = tf.expand_dims(tf.expand_dims(predicted_filter_flat[i,j],axis=-1),axis=-1)
-					image  = tf.reshape(image_patches_flat[i,j], [1, patch_size, patch_size, 3])
-					image = tf.pad(image,[[0,0],[2,2],[2,2],[0,0]],"SYMMETRIC")
-					k = tf.reshape(predicted_filter_flat[i,t,j],[filter_size,filter_size,1,1])
-					k = tf.tile(k,[1,1,3,1])
-					transformed.append(tf.nn.depthwise_conv2d(image, k, [1, 1, 1, 1], "VALID") )
-		transformed0 = tf.concat(transformed, axis=0)
-		transformed0 = tf.reshape(transformed0,[self.batch_size, self.frames_nb, self.image_size, self.image_size,3])
-		return None, None, None, None, None, transformed0, None, None, None
-		#return gf4, mask1, mask2, mask3, gb4, static_video, m1_gb, m2_gf, m3_im
+		#image_patches_flat = tf.reshape(image_patches, [self.batch_size, int( (self.image_size/patch_size)**2 ),-1])
 
-                
-                
-		print(1)
-        
+		transformed = []
+		for i in range(self.batch_size):
+			for t in range(self.frames_nb):
+				for j in range(int((self.image_size/patch_size)**2) ):
+					#image0  = tf.reshape(image_patches_flat[i,j], [1, patch_size, patch_size, 3])
+					image0 = tf.expand_dims(patches[i,j],axis=0)
+					image0 = tf.pad(image0,[[0,0],[2,2],[2,2],[0,0]],"SYMMETRIC")                   
+					#aa = np.zeros([5,5],dtype=np.float32)
+					#aa[2,2] = 1                    
+					#tmp = tf.constant(predicted_filter_flat[i,t,j]) #predicted_filter_flat[i,t,j]
+					tmp = predicted_filter_flat[i,t,j]
+					k = tf.reshape(tmp,[filter_size,filter_size,1,1])                    
+					k = tf.tile(k,[1,1,3,1])
+					t_one = tf.nn.depthwise_conv2d(image0, k, [1, 1, 1, 1], "VALID")
+					transformed.append(t_one)
+				
+		# Using patches here to reconstruct
+		transformed0 = tf.concat(transformed, axis=0)
+		patches_proc = tf.reshape(transformed0,[-1,int(self.image_size/patch_size),int(self.image_size/patch_size),patch_size**2,3])
+		patches_proc = tf.split(patches_proc,patch_size**2,3)
+		patches_proc = tf.stack(patches_proc,axis=0)
+		patches_proc = tf.reshape(patches_proc,[-1,int(self.image_size/patch_size),int(self.image_size/patch_size),3])
+		reconstructed = tf.batch_to_space_nd(patches_proc,[patch_size, patch_size],pad)
+		reconstructed = tf.reshape(reconstructed, [self.batch_size , self.frames_nb, self.image_size, self.image_size,3])
+
+		#return gf4, mask1, mask2, mask3, gb4, static_video, m1_gb, m2_gf, m3_im
+		return image_patches,transformed0, None, None, None, None, None, reconstructed, None, None, None        
         
 def videogan_generator(self, image,z,mtx, options, reuse = False, name="generatorA"):
 	mtx = None

@@ -10,10 +10,10 @@ import imageio
 
 ##
 parser = argparse.ArgumentParser(description='')
-parser.add_argument('--batch_size', dest='batch_size', type=int, default=4, help='# images in batch')
+parser.add_argument('--batch_size', dest='batch_size', type=int, default=1, help='# images in batch')
 parser.add_argument('--dataset_dir', dest='dataset_dir', default='best_v1', help='path of the dataset')
-parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', default='./checkpoint1', help='models are saved here')
-parser.add_argument('--sample_dir', dest='sample_dir', default='./sample1', help='sample are saved here')
+parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', default='./checkpoint_shift', help='models are saved here')
+parser.add_argument('--sample_dir', dest='sample_dir', default='./sample_shift', help='sample are saved here')
 
 #parser.add_argument('--dataset_dir', dest='dataset_dir', default='horse2zebra_wgan', help='path of the dataset')
 parser.add_argument('--epoch', dest='epoch', type=int, default=200, help='# of epoch')
