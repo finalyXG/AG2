@@ -303,8 +303,8 @@ def videogan_generator_shiftpixel(self, image,z,mtx, options, reuse = False, nam
 		i3 = lrelu(instance_norm(conv2d(i2, 128 , 4, 2,name='ci_i3_conv_om'), 'ci_bni3_om'))
 		i4 = lrelu(instance_norm(conv2d(i3, 256 , 4, 2,name='ci_i4_conv_om'), 'ci_bni4_om'))
 		i5 = lrelu(instance_norm(conv2d(i4, 512 , 4, 2,name='ci_i5_conv_om'), 'ci_bni5_om'))
-		patch_size = 8
-		filter_size = 5
+		patch_size = 16
+		filter_size = 9
 		image_patches = tf.extract_image_patches(image, [1, patch_size, patch_size, 1], [1,patch_size,patch_size,1], [1,1,1,1], padding='SAME')
         
 		pad = [[0,0],[0,0]]
@@ -326,7 +326,7 @@ def videogan_generator_shiftpixel(self, image,z,mtx, options, reuse = False, nam
 				for j in range(int((self.image_size/patch_size)**2) ):
 					#image0  = tf.reshape(image_patches_flat[i,j], [1, patch_size, patch_size, 3])
 					image0 = tf.expand_dims(patches[i,j],axis=0)
-					image0 = tf.pad(image0,[[0,0],[2,2],[2,2],[0,0]],"SYMMETRIC")                   
+					image0 = tf.pad(image0,[[0,0],[4,4],[4,4],[0,0]],"SYMMETRIC")                   
 					#aa = np.zeros([5,5],dtype=np.float32)
 					#aa[2,2] = 1                    
 					#tmp = tf.constant(predicted_filter_flat[i,t,j]) #predicted_filter_flat[i,t,j]
