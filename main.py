@@ -3,7 +3,7 @@ import os
 import scipy.misc
 import numpy as np
 import tensorflow as tf
-from model import cyclegan
+from model_lbxx import cyclegan
 import crash_on_ipy 
 import ipdb
 import imageio
@@ -11,9 +11,9 @@ import imageio
 ##
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--batch_size', dest='batch_size', type=int, default=4, help='# images in batch')
-parser.add_argument('--dataset_dir', dest='dataset_dir', default='best_v1', help='path of the dataset')
-parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', default='./checkpoint_shift', help='models are saved here')
-parser.add_argument('--sample_dir', dest='sample_dir', default='./sample_shift', help='sample are saved here')
+parser.add_argument('--dataset_dir', dest='dataset_dir', default='lbxx', help='path of the dataset')
+parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', default='./checkpoint_lbxx', help='models are saved here')
+parser.add_argument('--sample_dir', dest='sample_dir', default='./sample_lbxx', help='sample are saved here')
 
 #parser.add_argument('--dataset_dir', dest='dataset_dir', default='horse2zebra_wgan', help='path of the dataset')
 parser.add_argument('--epoch', dest='epoch', type=int, default=200, help='# of epoch')
@@ -26,7 +26,7 @@ parser.add_argument('--frame_w', dest='frame_w', type=int, default=128, help='vi
 parser.add_argument('--frame_h', dest='frame_h', type=int, default=128, help='video height with croping')
 parser.add_argument('--frame_cs', dest='frame_cs', type=int, default=96, help='video with croping')
 
-parser.add_argument('--frames_nb', dest='frames_nb', type=int, default=4, help='number of anime frames to be predicted')
+parser.add_argument('--frames_nb', dest='frames_nb', type=int, default=8, help='number of anime frames to be predicted')
 
 parser.add_argument('--z_dim', dest='z_dim', type=int, default=100, help='# the dimension of z')
 parser.add_argument('--ngf', dest='ngf', type=int, default=32, help='# of gen filters in first conv layer')
